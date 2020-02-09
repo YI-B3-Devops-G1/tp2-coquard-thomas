@@ -1,0 +1,66 @@
+version: '3.1'
+services:
+
+  #API 
+
+  nodejs:
+    hostname: nodejs
+    build:
+      context: ./
+      dockerfile: ./Docker-node/Dockerfile
+    depends_on: 
+      - postgres
+      - redis
+    container_name: nodejs
+    networks:
+      - network-nodejs
+      - network-db
+
+  #NGINX
+  
+  nginx:
+    build:
+      context: ./
+      dockerfile: ./Docker-nginx/Dockerfile
+    depends_on:
+      - nodejs
+    container_name: nginx
+    ports:
+      - "8080:80"
+      - "4430:443"
+    volumes:
+      - ./docker-nginx:/etc/nginx/conf.d/
+    networks:
+      - network-nodejs
+    
+  #SQL
+  
+  postgres:
+    hostname: postgres
+    depends_on: 
+      - redis
+    image: postgres:alpine
+    ports:
+      - "3306:3306"
+    container_name: postgres
+    environment:
+      POSTGRES_DATABASE: database
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootroot
+    networks:
+      - network-db
+   
+  # Base de données clé valeur
+  
+  redis:
+    image: redis:alpine
+    ports: 
+      - "379:6379"
+    networks:
+      - network-db
+  
+  #Docker Networks
+  
+networks: 
+  network-db:
+  network-nodejs:
